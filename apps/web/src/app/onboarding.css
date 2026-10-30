@@ -1,0 +1,59 @@
+.onboarding{padding:24px;display:grid;gap:24px}
+.onboard-intro h2{font-size:27px;letter-spacing:-.04em;line-height:1.15;margin:10px 0}
+.onboard-intro p,.onboard-stage p,.onboard-directory>p{font-size:13px;line-height:1.55;color:var(--muted);margin:0}
+.onboard-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.onboard-choices button{display:grid;justify-items:start;gap:8px;min-height:145px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left}
+.onboard-choices button.selected{border-color:var(--blue);box-shadow:0 0 0 2px #3659e319}
+.onboard-choices button:disabled{opacity:.48;cursor:not-allowed;background:var(--soft)}
+.onboard-choices strong{font-size:13px}.onboard-choices small{color:var(--muted);font-size:11px;line-height:1.35}
+.choice-icon{display:grid;place-items:center;flex:0 0 auto;width:30px;height:30px;border-radius:9px;font-size:11px;font-weight:750;background:#e8edff;color:#273d94}
+.choice-icon.human{background:#e4f3eb;color:#285b46}.choice-icon.org{background:#f7ead4;color:#6e4b18}
+.onboard-panel{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.onboard-progress{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line);background:var(--soft)}
+.onboard-progress span{font-size:10px;font-weight:650;padding:12px 14px;color:var(--muted)}
+.onboard-progress span.active{color:var(--blue)}
+.onboard-stage,.onboard-form{padding:22px;display:grid;gap:16px}
+.onboard-stage h3,.onboard-form h3,.onboard-directory h3{font-size:16px;letter-spacing:-.02em;margin:0}
+.onboard-stage>.primary{justify-self:start}
+.onboard-form label{display:grid;gap:7px;font-size:12px;font-weight:650}
+.onboard-form label small{font-weight:400;color:var(--muted)}
+.onboard-form input,.onboard-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.onboard-form input:focus,.onboard-form select:focus{outline:2px solid #cad3ff;outline-offset:1px}
+.onboard-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:3px}
+.onboard-summary{display:grid;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.onboard-summary>div{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px;padding:11px 12px;border-bottom:1px solid var(--line);font-size:12px}
+.onboard-summary>div:last-child{border-bottom:0}
+.onboard-summary span{color:var(--muted)}.onboard-summary code{overflow-wrap:anywhere}
+.onboard-stage .onboard-caveat{font-size:11px;background:var(--soft);border-radius:10px;padding:11px}
+.onboard-error{color:#a32b2b;font-size:12px;margin:0}
+.onboard-directory{border-top:1px solid var(--line);padding-top:20px;display:grid;gap:12px}
+.onboard-identity{display:flex;gap:10px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:11px}
+.onboard-identity>div{display:grid;gap:4px;min-width:0}.onboard-identity strong{font-size:12px}.onboard-identity small{font-size:11px;color:var(--muted)}
+.mobile-nav{grid-template-columns:repeat(5,1fr)}
+@media(max-width:760px){.onboarding{padding:18px 17px}.onboard-choices{grid-template-columns:1fr}.onboard-choices button{min-height:0;grid-template-columns:30px 1fr;align-items:center}.onboard-choices .choice-icon{grid-row:1/3}.onboard-choices small{grid-column:2}.onboard-stage,.onboard-form{padding:18px}.onboard-progress span{padding:10px 7px;font-size:9px}}
+.auth-loading{min-height:100vh;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.auth-shell{min-height:100vh;display:grid;place-items:center;background:#f7f8fa;padding:24px;border:0}
+.auth-card{width:min(100%,460px);background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 18px 55px #1b263210}
+.auth-card .brand{margin-bottom:36px}.auth-card h1{font-size:28px;letter-spacing:-.04em;margin:9px 0}
+.auth-card>p{font-size:13px;line-height:1.55;color:var(--muted)}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin:22px 0}
+.auth-tabs button{border:0;background:transparent;padding:12px;color:var(--muted);font-size:13px}
+.auth-tabs button.active{color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)}
+.auth-form{display:grid;gap:15px}.auth-form label{display:grid;gap:7px;font-size:12px;font-weight:650}
+.auth-form input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px}
+.auth-form>.primary{width:100%;margin-top:3px;font-size:13px}
+.auth-card .auth-note{background:var(--soft);padding:11px;border-radius:10px;font-size:11px;margin:20px 0}
+.demo-logins{border-top:1px solid var(--line);padding-top:19px}.demo-logins strong{font-size:12px}.demo-logins p{font-size:11px;color:var(--muted);line-height:1.5}
+.demo-logins>div{display:flex;flex-wrap:wrap;gap:8px}
+.logout-button{border:0;background:transparent;text-align:left;color:var(--muted);padding:8px 14px;font-size:12px}
+.logout-button:hover{color:var(--ink)}.account-header{display:flex;justify-content:flex-end;padding:14px 24px 0}
+.mobile-self{border:0;background:transparent;padding:0}.mobile-self .avatar{width:32px;height:32px}
+.account-owner{display:flex;gap:11px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:13px}
+.account-owner>div{display:grid;gap:4px}.account-owner strong{font-size:13px}.account-owner small{font-size:11px;color:var(--muted)}
+.account-hint{font-size:11px;line-height:1.55;color:var(--muted);margin:0}.account-success{font-size:12px;color:var(--green);padding:12px;border-radius:10px;background:#edf8f3;margin:0}
+@media(max-width:760px){.auth-card{padding:22px}.account-header{padding:12px 17px 0}.onboard-choices button{min-height:0}}
+.network-wallet-form{display:grid;grid-template-columns:1fr auto;align-items:end;gap:9px;padding:14px;border:1px solid var(--line);border-radius:13px}
+.network-wallet-form label{display:grid;gap:6px;font-size:12px;font-weight:650;min-width:0}.network-wallet-form label small{font-weight:400;color:var(--muted)}
+.network-wallet-form input{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px;font-size:12px}
+.network-wallet-form p{grid-column:1/-1;font-size:11px;color:var(--muted);margin:0}
+@media(max-width:760px){.network-wallet-form{grid-template-columns:1fr}.network-wallet-form button{justify-self:start}}

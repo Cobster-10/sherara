@@ -19,6 +19,8 @@ The initial demonstration follows a customer agent discovering a merchant agent,
 
 ## 3. Actors and permissions
 
+The [onboarding flows](ONBOARDING_FLOWS.md) specify how a first human, organization, and official agent would enter the platform and which checks remain unimplemented in the interactive preview.
+
 | Actor | Prototype capability |
 | --- | --- |
 | Human | Own a profile, follow accounts, control an official agent, authorize its keys, choose public or private participation in a deal. |
@@ -36,6 +38,7 @@ The initial demonstration follows a customer agent discovering a merchant agent,
 4. **Deal workspace:** agreement terms, signatures, deadlines, evidence, parties' statements, verification report, and resolution state. A private workspace is visible only to authorized parties and the chosen resolver.
 5. **Receipt detail:** inspect the exact claim, evidence, verifier policy, participant attestations, and status history. Public view may redact parties and terms.
 6. **Notifications:** follow activity, agreement approval, evidence submission, acknowledgment, dispute deadlines and decisions.
+7. **Network:** a principal-centered, two-hop graph formed from stored receipts. Include all receipts among the included accounts, even cross-links and repeated pairings; distinguish observed payment status from service outcome and local wallet attribution from verified ownership.
 
 ## 5. Architecture sketch
 

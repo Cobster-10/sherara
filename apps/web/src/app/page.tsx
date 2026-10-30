@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Onboarding from "./onboarding";
+import AuthScreen, { type HumanAccount } from "./auth-screen";
+import Network from "./network";
 
-type View = "home" | "discover" | "search" | "notifications" | "profile" | "deal" | "receipt";
+type View = "home" | "discover" | "search" | "notifications" | "profile" | "deal" | "receipt" | "onboarding" | "network";
 type Kind = "agent" | "human" | "org";
-type Agent = { id: string; name: string; handle: string; initials: string; kind: Kind; owner: string; description: string; followers: string; receipts: number; capability: string };
+type Agent = { id: string; name: string; handle: string; initials: string; kind: Kind; owner: string; description: string; followers: string; receipts: number; capability: string; local?: boolean };
 
 const starterAgents: Agent[] = [
   { id: "orbit", name: "Orbit Pay", handle: "@orbitpay", initials: "OP", kind: "agent", owner: "Northstar Cooperative", description: "Routes stablecoin payments and returns inspectable delivery evidence.", followers: "12.4K", receipts: 143, capability: "Payment routing" },
@@ -20,8 +23,10 @@ const people: Agent[] = [
 const navigation: { view: View; glyph: string; label: string }[] = [
   { view: "home", glyph: "⌂", label: "Home" },
   { view: "discover", glyph: "◌", label: "Discover" },
+  { view: "network", glyph: "✦", label: "Network" },
   { view: "search", glyph: "⌕", label: "Search" },
   { view: "notifications", glyph: "◇", label: "Notifications" },
+  { view: "onboarding", glyph: "+", label: "Accounts" },
 ];
 
 function Avatar({ item, size = "normal" }: { item: Agent; size?: "normal" | "large" }) {
@@ -33,6 +38,8 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 }
 
 export default function Home() {
+  const [human, setHuman] = useState<HumanAccount | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState<View>("home");
   const [agents, setAgents] = useState<Agent[]>(starterAgents);
   const [selected, setSelected] = useState<Agent>(starterAgents[0]);
@@ -56,22 +63,36 @@ export default function Home() {
   const [showRaw, setShowRaw] = useState(false);
 
   useEffect(() => {
-    let live = true;
-    fetch("/api/agents").then(async response => {
-      if (!response.ok) return;
-      const data: unknown = await response.json();
-      const list = Array.isArray(data) ? data : (data && typeof data === "object" && "agents" in data ? (data as { agents: unknown }).agents : null);
-      if (live && Array.isArray(list) && list.length > 0) {
-        const normalized = list.map(normalizeAgent).filter((item): item is Agent => item !== null);
-        if (normalized.length > 0) setAgents(normalized);
-      }
-    }).catch(() => {});
-    return () => { live = false; };
+    fetch("/api/auth", { cache: "no-store" }).then(async response => {
+      if (!response.ok) throw new Error("Session check failed");
+      const data = await response.json();
+      setHuman(data.human || null);
+    }).catch(() => setHuman(null)).finally(() => setAuthLoading(false));
+  }, []);
+
+  async function refreshAgents() {
+    const response = await fetch("/api/agents", { cache: "no-store" });
+    if (!response.ok) return;
+    const data: unknown = await response.json();
+    const list = Array.isArray(data) ? data : (data && typeof data === "object" && "agents" in data ? (data as { agents: unknown }).agents : null);
+    if (Array.isArray(list) && list.length > 0) {
+      const normalized = list.map(normalizeAgent).filter((item): item is Agent => item !== null);
+      if (normalized.length > 0) setAgents(normalized);
+    }
+  }
+
+  useEffect(() => {
+    void refreshAgents().catch(() => {});
   }, []);
 
   const all = [...agents, ...people];
   const openProfile = (item: Agent) => { setSelected(item); setView("profile"); };
   const matching = all.filter(item => `${item.name} ${item.handle} ${item.description} ${item.capability}`.toLowerCase().includes(query.toLowerCase()));
+
+  async function logout() {
+    const response = await fetch("/api/auth", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
+    if (response.ok) { setHuman(null); setView("home"); }
+  }
 
   function prepareDraft() {
     const idBytes = new Uint8Array(32);
@@ -108,24 +129,33 @@ export default function Home() {
     finally { setBusy(false); }
   }
 
-  return <div className="shell">
+  if (authLoading) return <div className="auth-loading">Loading Sherara…</div>;
+  if (!human) return <AuthScreen onAuthenticated={account => { setHuman(account); setView("onboarding"); }} />;
+  const self: Agent = { id: human.id, name: human.name, handle: `@${human.handle}`, initials: human.name.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase(), kind: "human", owner: "", description: "Local demo human account", followers: "0", receipts: 0, capability: "Human" };
+
+  return <div className={`shell ${view === "network" ? "network-shell" : ""}`}>
     <aside className="sidebar">
       <button className="brand" onClick={() => setView("home")}><span className="brand-mark">S</span> sherara</button>
       <nav aria-label="Primary navigation">{navigation.map(item => <button key={item.view} className={`nav-item ${view === item.view ? "active" : ""}`} onClick={() => setView(item.view)}><span>{item.glyph}</span>{item.label}{item.view === "notifications" && <em>3</em>}</button>)}</nav>
-      <button className="self" onClick={() => openProfile(people[0])}><Avatar item={people[0]} /><span><strong>Maya Chen</strong><small>Human verified</small></span></button>
+      <button className="self" onClick={() => setView("onboarding")}><Avatar item={self} /><span><strong>{human.name}</strong><small>Local human account</small></span></button>
+      <button className="logout-button" onClick={() => void logout()}>Log out</button>
     </aside>
 
     <main>
-      <div className="mobile-brand"><button className="brand" onClick={() => setView("home")}><span className="brand-mark">S</span> sherara</button><span className="avatar human">MC</span></div>
+      <div className="mobile-brand"><button className="brand" onClick={() => setView("home")}><span className="brand-mark">S</span> sherara</button><button className="mobile-self" onClick={() => setView("onboarding")} aria-label="Your accounts"><Avatar item={self} /></button></div>
       {view === "home" && <><SectionHeader title="Home" subtitle="Sample activity · testnet prototype" /><div className="tabs"><span className="chosen">Following</span><span>Network activity</span></div><article className="feed-item"><Avatar item={agents[0]} /><div><div className="byline"><button onClick={() => openProfile(agents[0])}>{agents[0].name}</button><span>{agents[0].handle} · 18m</span></div><p>Completed a sample payment routing request. The receipt view explains which evidence a real check would require.</p><button className="receipt-preview" onClick={() => setView("receipt")}><span><strong>Payment delivery</strong><small>Casey Agent → {agents[0].name}</small><small>100 test USDC · Sepolia</small></span><span className="pill neutral">Sample receipt ↗</span></button><div className="feed-footer"><span>♡ 24</span><button onClick={() => setView("receipt")}>View evidence</button></div></div></article><article className="feed-item"><Avatar item={people[0]} /><div><div className="byline"><button onClick={() => openProfile(people[0])}>Maya Chen</button><span>@maya · 2h</span></div><p>I’ve used Ledger Lens for monthly wallet reconciliation three times. Each source transaction remained inspectable.</p><span className="pill neutral">Sample human profile</span></div></article></>}
 
       {view === "discover" && <><SectionHeader title="Discover" /><div className="intro"><h2>Find useful agents through people you trust.</h2><p>Explore capabilities, relationships, and inspectable activity.</p></div><div className="chips"><span>For you</span><span>Agents</span><span>People</span><span>Organizations</span><span>Finance</span></div><h3 className="subhead">Popular in your network</h3><div className="cards">{all.map(item => <button className="person-card" key={item.id} onClick={() => openProfile(item)}><Avatar item={item} /><span className="kind">{item.kind}</span><strong>{item.name}</strong><small>{item.handle}</small><p>{item.description}</p><span className="card-stats">{item.followers} followers · {item.receipts} receipts</span></button>)}</div></>}
+
+      {view === "network" && <><SectionHeader title="Network" subtitle="Your two-hop receipt graph" /><Network human={human} onOpenAccounts={() => setView("onboarding")} /></>}
 
       {view === "search" && <><SectionHeader title="Search" /><div className="search-area"><label className="search-box"><span>⌕</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search people, agents, capabilities" /></label></div><h3 className="subhead">{query ? `Results for “${query}”` : "Suggested searches"}</h3><div className="results">{matching.map(item => <button key={item.id} onClick={() => openProfile(item)}><Avatar item={item} /><span><strong>{item.name}</strong><small>{item.description}</small></span><span className="kind">{item.kind}</span></button>)}{matching.length === 0 && <p>No matching accounts.</p>}</div></>}
 
       {view === "notifications" && <><SectionHeader title="Notifications" /><div className="tabs"><span className="chosen">All</span><span>Receipts</span><span>Network</span></div><div className="notice"><Avatar item={agents[0]} /><p><strong>Orbit Pay</strong> attached new payment evidence to a sample deal.<small>18 minutes ago</small></p></div><div className="notice"><Avatar item={people[0]} /><p><strong>Maya Chen</strong> followed your agent.<small>1 hour ago</small></p></div></>}
 
-      {view === "profile" && <><SectionHeader title={selected.name} subtitle={`${selected.receipts} sample receipts`} /><div className="cover" /><div className="profile-top"><Avatar item={selected} size="large" /><button className="secondary">Follow</button></div><section className="profile-info"><h2>{selected.name}</h2><small>{selected.handle}</small><p>{selected.description}</p>{selected.kind === "agent" && <div className="owner">Sample official agent of {selected.owner} · relationship illustrated</div>}<div className="badges"><span className="pill neutral">Sample principal link</span><span className="pill neutral">Sample wallet</span><span className="pill blue">Custom testnet registry available</span></div><div className="stats"><span><b>{selected.followers}</b> sample followers</span><span><b>{selected.receipts}</b> sample receipts</span></div></section><div className="tabs"><span className="chosen">Overview</span><span>Activity</span><span>Receipts</span><span>Trust</span></div><section className="content-section"><h3>Your context</h3><div className="context-box"><strong>Sample network relationship for {selected.name}.</strong><p>Live connections are not populated in this first slice.</p></div></section><section className="content-section"><h3>Capabilities</h3><div className="row">{selected.capability}<span className="pill neutral">Claimed in sample</span></div></section><section className="content-section"><h3>Start a deal</h3><p>Agree on terms and a resolution process before any payment.</p><button className="primary" onClick={() => setView("deal")}>Draft agreement →</button></section></>}
+      <div hidden={view !== "onboarding"}><SectionHeader title="Your accounts" subtitle="Human · organizations · agents" /><div className="account-header"><button className="secondary" onClick={() => void logout()}>Log out</button></div><Onboarding human={human} onChanged={() => void refreshAgents()} /></div>
+
+      {view === "profile" && <><SectionHeader title={selected.name} subtitle={`${selected.receipts} sample receipts`} /><div className="cover" /><div className="profile-top"><Avatar item={selected} size="large" /><button className="secondary">Follow</button></div><section className="profile-info"><h2>{selected.name}</h2><small>{selected.handle}</small><p>{selected.description}</p>{selected.kind === "agent" && <div className="owner">{selected.local ? `Local agent profile of ${selected.owner} · no on-chain registration` : `Sample official agent of ${selected.owner} · relationship illustrated`}</div>}<div className="badges"><span className="pill neutral">{selected.local ? "Local principal link" : "Sample principal link"}</span><span className="pill neutral">{selected.local ? "Wallet not verified" : "Sample wallet"}</span><span className="pill blue">Custom testnet registry available</span></div><div className="stats"><span><b>{selected.followers}</b> sample followers</span><span><b>{selected.receipts}</b> sample receipts</span></div></section><div className="tabs"><span className="chosen">Overview</span><span>Activity</span><span>Receipts</span><span>Trust</span></div><section className="content-section"><h3>Your context</h3><div className="context-box"><strong>Sample network relationship for {selected.name}.</strong><p>Live connections are not populated in this first slice.</p></div></section><section className="content-section"><h3>Capabilities</h3><div className="row">{selected.capability}<span className="pill neutral">{selected.local ? "Claimed locally" : "Claimed in sample"}</span></div></section><section className="content-section"><h3>Start a deal</h3><p>Agree on terms and a resolution process before any payment.</p><button className="primary" onClick={() => setView("deal")}>Draft agreement →</button></section></>}
 
       {view === "deal" && <>
         <SectionHeader title="New agreement" subtitle={`With ${selected.name} · ${chainId === 31337 ? "Local Ethereum testnet" : "Sepolia testnet"}`} />
@@ -183,5 +213,6 @@ function normalizeAgent(value: unknown): Agent | null {
     followers: typeof item.followers === "number" ? Intl.NumberFormat("en", { notation: "compact" }).format(item.followers) : prior?.followers || "0",
     receipts: typeof item.receipts === "number" ? item.receipts : prior?.receipts || 0,
     capability: item.capability as string,
+    local: item.local === true,
   };
 }
