@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env.local
+.env
+.sherara-data/
+out/
+cache/
+artifacts/
+coverage/
+*.tsbuildinfo
